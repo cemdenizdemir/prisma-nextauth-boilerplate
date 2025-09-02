@@ -1,10 +1,13 @@
-import AuthButton from "@/components/authButtons";
+// import AuthButton from "@/components/authButtons";
+import { AuthForm } from "@/components/authenticationForm";
 
 export default async function Login() {
   return (
     <div>
-      <div>Giriş Yap</div>
-      <AuthButton />
+      <div>Login into account</div>
+      <AuthForm type="login" />
+
+      {/* <AuthButton /> */}
     </div>
   );
 }
