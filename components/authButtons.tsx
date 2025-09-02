@@ -11,7 +11,9 @@ export default function AuthStatus() {
       <div className="border-2 border-slate-500  [&>*>*:hover]:cursor-pointer [&>*>*]:border-2 [&>*>*]:p-2 [&>*>*]:w-30 [&>*]:p-2">
         <div>Signed in as {session.user?.email}</div>
         <div>
-          <button onClick={() => signOut()}>Çıkış Yap</button>
+          <button className="hover:bg-slate-200" onClick={() => signOut()}>
+            Çıkış Yap
+          </button>
         </div>
       </div>
     );
@@ -32,7 +34,7 @@ export default function AuthStatus() {
             })
           }
         >
-          Google
+          Google ile gir
         </button>
       </div>
     </div>

@@ -31,6 +31,7 @@ import { loginSchema, signupSchema } from "@/types/authentication";
 // import type { LoginSchemaType, SignupSchemaType } from "@/types/authentication";
 
 import { signupAction } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 // const formSchema = z.object({
 //   email: z.email().min(1, {
@@ -46,6 +47,8 @@ export function AuthForm({
   type = "login",
   ...props
 }: React.ComponentProps<"div"> & { type?: "login" | "signup" }) {
+  const router = useRouter();
+
   const formSchema = type == "login" ? loginSchema : signupSchema;
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,12 +60,26 @@ export function AuthForm({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-
+    let res;
     if (type === "signup") {
-      const res = await signupAction(values as z.infer<typeof signupSchema>);
-      alert(res);
+      res = await signupAction(values as z.infer<typeof signupSchema>);
+      alert(JSON.stringify(res.message));
+
+      await signIn("credentials", {
+        // redirect: false,
+        email: values.email,
+        password: values.password,
+      });
     } else {
-      console.log("Login:", values);
+      await signIn("credentials", {
+        // redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+    }
+
+    if (res && res.success) {
+      router.push("/");
     }
   }
 
@@ -90,7 +107,7 @@ export function AuthForm({
   );
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 w-96 ", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
@@ -138,13 +155,14 @@ export function AuthForm({
                   renderField(name as keyof z.infer<typeof formSchema>)
                 )}
                 <div className="flex flex-col gap-3">
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full cursor-pointer">
                     {type == "login" ? "Login" : "Signup"}
                   </Button>
                   {type == "login" ? (
                     <Button
+                      type="button"
                       variant="outline"
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       onClick={() =>
                         signIn("google", {
                           callbackUrl: "/", // or "/dashboard"

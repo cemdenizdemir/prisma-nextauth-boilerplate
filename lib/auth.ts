@@ -5,12 +5,18 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import { NextAuthOptions } from "next-auth";
 import type { User } from "next-auth";
+import { generateUsername } from "./utils/generateUserName";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma), // ✅ Save OAuth users to DB
+  adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt", // ✅ Keep JWT sessions
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24,
   },
+  // session: {
+  // strategy: "database",
+  // maxAge: 60 * 60 * 24,
+  // },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -55,6 +61,60 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        const googleProfile = profile as {
+          email?: string;
+          name?: string;
+          picture?: string;
+        };
+
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (existingUser) {
+          const updateData: Record<string, any> = {};
+
+          if (!existingUser.image && googleProfile?.picture) {
+            updateData.image = googleProfile.picture;
+          }
+
+          if (existingUser.username == null) {
+            updateData.username = generateUsername(user.name);
+          }
+
+          if (Object.keys(updateData).length > 0) {
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: updateData,
+            });
+          }
+          // Link this Google account to the existing credentials user
+          await prisma.account.upsert({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            create: {
+              userId: existingUser.id,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              type: account.type,
+              access_token: account.access_token,
+              refresh_token: account.refresh_token,
+            },
+            update: {},
+          });
+
+          return true;
+        }
+      }
+
+      return true;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

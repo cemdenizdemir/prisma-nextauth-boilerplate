@@ -9,5 +9,7 @@ export async function signupAction(data: z.infer<typeof signupSchema>) {
     throw new Error("Invalid data");
   }
 
-  return await signupService(parsed.data);
+  const { confirmPassword, ...userData } = parsed.data;
+
+  return await signupService({ data: userData });
 }

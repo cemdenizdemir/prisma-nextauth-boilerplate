@@ -1,18 +1,27 @@
 import { z } from "zod";
 
-const passwordLength = 1;
+import { password_min_length } from "@/lib/config/auth";
 
 export const loginSchema = z.object({
   email: z.email().min(1, {
     message: "Enter email.",
   }),
-  password: z.string().min(passwordLength, {
+  password: z.string().min(password_min_length, {
     message: "Enter email.",
   }),
 });
 
 export const signupSchema = z
   .object({
+    name: z
+      .string()
+      .min(1, {
+        message: "Enter username.",
+      })
+      .trim()
+      .regex(/^[a-zA-Z\s]+$/, {
+        message: "Name can only contain letters .",
+      }),
     username: z
       .string()
       .min(1, {
@@ -24,10 +33,10 @@ export const signupSchema = z
     email: z.string().email({
       message: "Enter a valid email.",
     }),
-    password: z.string().min(passwordLength, {
+    password: z.string().min(password_min_length, {
       message: "Enter password.",
     }),
-    confirmPassword: z.string().min(passwordLength, {
+    confirmPassword: z.string().min(password_min_length, {
       message: "Confirm your password.",
     }),
   })
