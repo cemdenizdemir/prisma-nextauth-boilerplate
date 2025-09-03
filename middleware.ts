@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "./lib/middleware/nextauth";
-// Example: import { loggerMiddleware } from "./lib/middlewares/logger";
+import { loggerMiddleware } from "./lib/middleware/logger";
 // Example: import { rateLimitMiddleware } from "./lib/middlewares/rateLimit";
 
 const middlewares = [
   authMiddleware,
-  // loggerMiddleware,
+  loggerMiddleware,
   // rateLimitMiddleware,
 ];
 
 export default async function middleware(req: NextRequest) {
+  let response: NextResponse | undefined;
+
   for (const mw of middlewares) {
     const result = await mw(req);
-    if (result) return result; // Stop at first middleware that returns a response
+
+    // If this middleware gave a redirect/response, keep it
+    if (result && !response) {
+      response = result;
+    }
   }
-  return NextResponse.next();
+
+  // If some middleware decided to block, return that, otherwise continue
+  return response ?? NextResponse.next();
 }
 
 export const config = {
