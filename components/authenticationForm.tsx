@@ -30,7 +30,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { loginSchema, signupSchema } from "@/types/authentication";
 // import type { LoginSchemaType, SignupSchemaType } from "@/types/authentication";
 
-import { signupAction } from "@/app/actions/auth";
+import { signupAction } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 
 // const formSchema = z.object({
